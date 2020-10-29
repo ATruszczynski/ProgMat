@@ -6,7 +6,7 @@ function lab1()
     A = [1, 0, 1, 0; 0, 1, 0, 1];
     b = [2; 2];
     c = [-1; -1; 0; 0;];
-    [result1, funcVal, status, message] = simplex(A, b, -c)
+    [result, funcVal, status, message] = simplex(A, b, -c)
     
     disp('----------------------------------------')
 
@@ -15,7 +15,7 @@ function lab1()
     A = [-1, 1, 1, 0; 1, -1, 0, 1];
     b = [2; 2];
     c = [-1; -1; 0; 0;];
-    [result2, funcVal, status, message] = simplex(A, b, -c)
+    [result, funcVal, status, message] = simplex(A, b, -c)
     
     disp('----------------------------------------')
 
@@ -24,13 +24,26 @@ function lab1()
     A = [1, 0, 1, 0, 0; 0, 1, 0, 1, 0; 1, 1, 0, 0, 1;];
     b = [2; 2; 3;];
     c = [-1; -1; 0; 0; 0;];
-    [result3, funcVal, status, message] = simplex(A, b, -c)
+    [result, funcVal, status, message] = simplex(A, b, -c)
     
-%     disp('----------------------------------------')
-% 
-%     result1
-%     result2
-%     result3
+    disp('----------------------------------------')
+    
+%   pierwszy przykład z wykładu
+    A = [2, 1, 1, 0, 0; 3, 3, 0, 1, 0; 1.5, 0, 0, 0, 1;];
+    b = [10; 24; 6;];
+    c = [3; 2; 0; 0; 0;];
+    [result, funcVal, status, message] = simplex(A, b, c)
+    
+    disp('----------------------------------------')
+    
+%   drugi przykład z wykładu
+    A = [1, 2, -1, -1, 1, 0; 2, -2, 3, -3, 0, 1;];
+    b = [4; 9;];
+    c = [3; 1; 3; -1; 0; 0;];
+    [result, funcVal, status, message] = simplex(A, b, c)
+    
+    disp('----------------------------------------')
+
 
 
         
