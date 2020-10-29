@@ -1,62 +1,47 @@
 function lab1()
-    %saveLinProg("Laby/TestFiles/linprog", 10, [2,2])
+    linoprogTest(10) % wywołuje linprog tyle razy, ile zostanie podane jako argument
 
-%     A = [2, 1, 1, 0, 0; 3, 3 ,0, 1, 0; 1.5, 0, 0, 0, 1];
-%     b = [10; 24; 6];
-%     c = [3; 2; 0; 0; 0];
-%     [result, funcVal, status, message] = simplexSF(A, b, c)
-%     
-%     disp('----------------------------------------')
-%     
-%     A = [1, 0, 1, 0; 0, 1, 0, 1];
-%     b = [2; 2];
-%     c = [1; 1; 0; 0;];
-%     [result, funcVal, status, message] = simplexSF(A, b, c)
-%     
-%     disp('----------------------------------------')
-%     
-%     
-%     A = [1, 2, -1, -1, 1, 0; 2, -2, 3, -3, 0, 1];
-%     b = [4; 9];
-%     c = [3; 1; -3; -1; 0; 0;];
-%     [result, funcVal, status, message] = simplexSF(A, b, c)
-%     
-%     disp('----------------------------------------')
-%     
-%     
-%     A = [-4, -2, -1, 1, 0, 0; 2, -1, 1, 0, 1, 0; 3, 0, 1, 0, 0, 1;];
-%     b = [2; 1; 5;];
-%     c = [-1; 1; 3; 0; 0; 0;];
-%     [result, funcVal, status, message] = simplexSF(A, b, c)
-%     
-%     disp('----------------------------------------')
-%     
-%     
-%     A = [-1, 1, 1, 0; 1, -1, 0, 1];
-%     b = [3; 3;];
-%     c = [1; 1; 0; 0;];
-%     [result, funcVal, status, message] = simplexSF(A, b, c)
+%     single solution
+    
+    A = [1, 0, 1, 0; 0, 1, 0, 1];
+    b = [2; 2];
+    c = [-1; -1; 0; 0;];
+    [result1, funcVal, status, message] = simplex(A, b, -c)
     
     disp('----------------------------------------')
+
+%     unbound
     
-    A = [1, 0, 1, 0, 0; 0, 1, 0, 1, 0; 1, 1, 0, 0, 1];
-    b = [4; 4; 6;];
-    c = [1; 1; 0; 0; 0;];
-    [result, funcVal, status, message] = simplexSF(A, b, c);
+    A = [-1, 1, 1, 0; 1, -1, 0, 1];
+    b = [2; 2];
+    c = [-1; -1; 0; 0;];
+    [result2, funcVal, status, message] = simplex(A, b, -c)
     
     disp('----------------------------------------')
+
+%     two solutions
     
+    A = [1, 0, 1, 0, 0; 0, 1, 0, 1, 0; 1, 1, 0, 0, 1;];
+    b = [2; 2; 3;];
+    c = [-1; -1; 0; 0; 0;];
+    [result3, funcVal, status, message] = simplex(A, b, -c)
+    
+%     disp('----------------------------------------')
+% 
+%     result1
+%     result2
+%     result3
+
+
+        
     
 end
 
-function saveLinProg(path, max_it, demanded)
-    if ~exist(path, 'dir')
-       mkdir(path)
-    end
-    
+function linoprogTest(max_it)
+    var_num = 10;
+    cond_num = 5;
+        
     for it = 1:max_it
-        var_num = 10
-        cond_num = 5
 
         ALE = [];
         bLE = [];
@@ -64,88 +49,60 @@ function saveLinProg(path, max_it, demanded)
         c = [];
 
         ALE = randi([-5, 5], cond_num, var_num);
-        ALE = [ALE, diag(ones(cond_num, 1))]
+        ALE = [ALE, diag(ones(cond_num, 1))];
         c = randi([-5, 5], var_num, 1);
-        c = [c; zeros(cond_num,1)]
-        bLE = randi([1, 5], cond_num, 1)
+        c = [c; zeros(cond_num,1)];
+        bLE = randi([1, 5], cond_num, 1);
         LB = zeros(var_num + cond_num, 1);
 
         options = optimset(@linprog);   
         options = optimset(options, 'Display', 'iter', 'Algorithm', 'dual-simplex');
         [x,fval,exitflag,output,lambda] = linprog(-c, [], [], ALE, bLE, LB, [], [], options)
         
-        if exitflag == 1 & demanded(1) > 0
-            demanded(1) = demanded(1) - 1
-            fp = strcat(path, "/0_", int2str(demanded(1)), ".txt")
-            fileID = fopen(fp,'w');
-            writematrix(ALE(:, 1:var_num), fp,'Delimiter','tab')
-            fprintf(fileID, "\n")
-            writematrix(bLE, fp,'Delimiter','tab','WriteMode','append')
-            fprintf(fileID, "\n")
-            writematrix(c, fp,'Delimiter','tab','WriteMode','append')
-            
-        elseif exitflag == -3 & demanded(2) > 0
-            demanded(2) = demanded(2) - 1  
-            fp = strcat(path, "/-3_", int2str(demanded(2)), ".txt")
-            fileID = fopen(fp,'a+');
-            writematrix(ALE(:, 1:var_num), fp,'Delimiter','tab')
-            fprintf(fileID, "\n")
-            writematrix(bLE, fp,'Delimiter','tab','WriteMode','append')
-            fprintf(fileID, "\n")
-            writematrix(c, fp,'Delimiter','tab','WriteMode','append')
-        end
-        
-        if demanded(1) == 0 & demanded(2) == 0 
-            break
-        end
-        
     end
-    fclose('all') 
 end
 
-function [result, funcVal, status, message] = simplexSF(A, b, c) % algorytm simplex, który przyjmuje problem w postaci standardowej
-    result = [];
-    status = 0; %1 - ok, -1 - unlimited, 2 - more than one solution
+function [result, funcVal, status, message] = simplex(A, b, c) % algorytm simplex, który przyjmuje problem w postaci standardowej
+    %status = 1 - ok; -1 - unlimited; 2 - more than one solution
     trueVariable = size(A,2) - size(A,1);
-    message = '';
-    funcVal = NaN;
+    
+    iteration = 0;
+    
     % krok 1
     
     n = size(A,2);
     base = trueVariable+1:n;
-    %base = [4, 5, 6]
     
     simplexTable = buildSimplexTable(A, b, c, base);
     
     while true
+        iteration = iteration + 1;
+        printState(simplexTable, iteration)
+        
         % krok 2
         
-        base = getBase(simplexTable);
-        nonBase = getNonBase(simplexTable);
-        
-        OptRates = getOptRates(simplexTable);
+        optRates = getOptRates(simplexTable); % optRates = z - c
 
-        % krok 3 - potencjalny koniec
-
-        isOptimal = all(OptRates>=0);
+        % krok 3
         
-        if isOptimal
+        if all(optRates>=0) % sprawdzenie warunku optymalności
             break
         end
 
         % krok 4 - potencjalny koniec
         
-        indWithNegativeOptR = find(OptRates < 0);
+        indiciesWithNegativeOptRates = find(optRates < 0); % indeksy, dla których należy sprawdzić warunek nieograniczności rozwiązania
         
         A_wave = getAWave(simplexTable);
         
-        for i = indWithNegativeOptR
+        for i = indiciesWithNegativeOptRates
             unlim = all(A_wave(:, i) <= 0);
             if unlim
                 status = -1;
                 result = [];
                 funcVal = Inf;
-                message = printExtremeRadius(i, simplexTable);
+                message = calculateExtremeRadius(i, simplexTable);
+                printState(simplexTable, iteration)
                 return
             end
         end
@@ -156,86 +113,71 @@ function [result, funcVal, status, message] = simplexSF(A, b, c) % algorytm simp
         
         % krok 6
         
-        b_wave = getBWave(simplexTable);
-        
-        enteringColumn = A_wave(:,enterIndex);
-        
-        indices = find(enteringColumn > 0);
-        
-        leaveScores = Inf(1, length(b_wave));
-        
-        leaveScores(indices) = b_wave(indices) ./ enteringColumn(indices);
-        
-        [~, exitIndex] = min(leaveScores);
+        exitIndex = chooseExitIndex(simplexTable, enterIndex);
         
         % krok 7,8
+        
         simplexTable = substituteBase(simplexTable, enterIndex, exitIndex);
     end
     
+    % przypisz odpowiedni status, wyniki i wiadomość dla pojedynczego
+    % rozwiązania
     status = 1;
     message = 'Single solution found';
     result = getResult(simplexTable);
     result = result(1:trueVariable);
     funcVal = getFuncVal(simplexTable);
     
-    simplexTable
+    printState(simplexTable, iteration)
     
+    % sprawdź czy istnieje drugie rozwiązanie
+    % jeśli tak, funkcja od razu zwraca indeksy zmiennej do dodadania do
+    % bazy i zmiennej do usunięcia z bazy
     [isThereAnother, enterIndex, exitIndex] = checkForAnotherSolution(simplexTable);
-%     simplexTable
+
     if isThereAnother
-        simplexTable = substituteBase(simplexTable, enterIndex, exitIndex)
+        % przelicz drugie rozwiązanie powtarzajac kroki 7-8
+        simplexTable = substituteBase(simplexTable, enterIndex, exitIndex);
+        
+        % przypisz odpowiedni status, wyniki i wiadomość dla dwóch
+        % rozwiązań
+        
         status = 2;
         result2 = getResult(simplexTable);
         result2 = result2(1:trueVariable); 
         funcVal2 = getFuncVal(simplexTable);
         message = ['Second solution found at [' num2str(result2) ']. The value of function at this point is ' num2str(funcVal2)];
+        
+        disp('Simplex table for other solution');
+        disp(simplexTable);
     end
 end
-% 
-% function exitInd = getIndToExit(simplexTable)
-%     [r, c] = size(oldSimplexTable);
-%     
-%     
-%     
-% end
 
-function enterIndex = chooseEnterIndex(simplexTable)
-    OptRates = getOptRates(simplexTable);
+% algorithm operations
+
+function enterIndex = chooseEnterIndex(simplexTable) % wyznacz indeks zmiennej wchodzącej do bazy
+    optRates = getOptRates(simplexTable);
     nonBase = getNonBase(simplexTable);
-    [~, rows] = size(OptRates);
+    [~, rows] = size(optRates);
     indicies = Inf(rows, 1);
     for i = nonBase
-        indicies(i) = OptRates(i);
+        indicies(i) = optRates(i);
     end
         
     [~, enterIndex] = min(indicies);
 end
 
-function exitIndex = chooseExitIndex(simple)
-end
+function exitIndex = chooseExitIndex(simplexTable, enterIndex)
+    A_wave = getAWave(simplexTable);
+    b_wave = getBWave(simplexTable);
+        
+    enteringColumn = A_wave(:,enterIndex);
+    indices = find(enteringColumn > 0);
 
-function [isThereAnother, enterIndex, exitIndex] = checkForAnotherSolution(simplexTable)
-    enterIndex = NaN;
-    exitIndex = NaN;
-    optRates = getOptRates(simplexTable);
-    
-    nonBase = getNonBase(simplexTable);
-    isThereAnother = ~all(optRates(nonBase) > 0);
-    
-    enterIndex = chooseEnterIndex(simplexTable);
-    
-    exitIndex = find(ismember(find(optRates==0), nonBase));
-    
-    if length(exitIndex) > 1
-        exitIndex = exitIndex(1);
-    end
-end
+    leaveScores = Inf(1, length(b_wave)); % wektor infów; jeśli inf nie zostanie zastąpiony inną wartością, to jest zasadniczo ignorowany przez min niżej
+    leaveScores(indices) = b_wave(indices) ./ enteringColumn(indices);
 
-function nonBase = getNonBase(simplexTable)
-    [~,c] = size(simplexTable);
-    base = getBase(simplexTable);
-    options = 1:c-3;
-    nonBase = options(~ismember(options, base));
+    [~, exitIndex] = min(leaveScores);
 end
 
 function newSimplexTable = substituteBase(simplexTable, enterIndex, exitIndex)
@@ -244,7 +186,7 @@ function newSimplexTable = substituteBase(simplexTable, enterIndex, exitIndex)
         A_wave = getAWave(simplexTable);
         b_wave = getBWave(simplexTable);
         
-        k = enterIndex;
+        k = enterIndex; % zmiana nazw zmiennych na te ze slajdów dla czytelności
         r = exitIndex;
         
         b_wave_p = b_wave;
@@ -275,16 +217,71 @@ function newSimplexTable = substituteBase(simplexTable, enterIndex, exitIndex)
         newSimplexTable = updateSimplexTable(simplexTable, A_wave_p, b_wave_p, k, r);
 end
 
-function message = printExtremeRadius(negInd, simplexTable)
-    varCount = size(simplexTable,2) - 3;
+function [isThereAnother, enterIndex, exitIndex] = checkForAnotherSolution(simplexTable)
+    enterIndex = NaN;
+    exitIndex = NaN;
+    optRates = getOptRates(simplexTable);
+    
+    nonBase = getNonBase(simplexTable);
+    isThereAnother = ~all(optRates(nonBase) > 0);
+    
+    enterIndex = chooseEnterIndex(simplexTable);
+    
+    exitIndex = chooseExitIndex(simplexTable, enterIndex);
+    
+    if length(exitIndex) > 1
+        exitIndex = exitIndex(1);
+    end
+end
+
+function message = calculateExtremeRadius(negInd, simplexTable)
+    variableCount = size(simplexTable,2) - 3;
     base = getBase(simplexTable);
     A_wave = getAWave(simplexTable);
     
     x = getResult(simplexTable);
-    v = zeros(1, varCount);
+    
+    % obliczenie wektora kiernkowego
+    v = zeros(1, variableCount);
     v(base) = -A_wave(:,negInd);
     v(negInd) = 1;
-    message = ['Solution is unlimited. Extreme vector found is: [' num2str(x) '] + a * [' num2str(v) ']'];
+    
+    message = ['Solution is unbound. Extreme radius found: [' num2str(x) '] + a * [' num2str(v) ']'];
+end
+
+% gets
+
+% funkcje wyciągające z tabelki sympleksu odpowiednie zmienne zapisane w
+% komórkach. Ich użycie przypomina użycie akcesorów w programowaniu
+% obiektowym
+
+function base = getBase(simplexTable)
+    [r, c] = size(simplexTable);
+    base = simplexTable(3:r-2 ,2).';
+end
+
+function nonBase = getNonBase(simplexTable)
+    [~,c] = size(simplexTable);
+    
+    % w nie-bazie jest dopełnienie bazy
+    base = getBase(simplexTable);
+    options = 1:c-3;
+    nonBase = options(~ismember(options, base));
+end
+
+function A_wave = getAWave(simplexTable)
+    [r, c] = size(simplexTable);
+    A_wave = simplexTable(3:r-2, 3:c-1);
+end
+
+function b_wave = getBWave(simplexTable)
+    [r, c] = size(simplexTable);
+    b_wave = simplexTable(3:r-2, c);
+end
+
+function optRates = getOptRates(simplexTable)
+    [r, c] = size(simplexTable);
+    optRates = simplexTable(r, 3:c-1);
 end
 
 function result = getResult(simplexTable)
@@ -300,70 +297,15 @@ function funcVal = getFuncVal(simplexTable)
     funcVal = simplexTable(r-1, c);
 end
 
-function simplexTable = updateSimplexTable(oldSimplexTable, A_wave, b_wave, enterInd, exitInd)
-    [r, c] = size(oldSimplexTable);
-    simplexTable = oldSimplexTable;
-    simplexTable(2 + exitInd, 2) = enterInd;
-    simplexTable(2 + exitInd, 1) = simplexTable(1, 2 + enterInd);
-    simplexTable(3:r-2, 3:c-1) = A_wave;
-    simplexTable(3:r-2, c) = b_wave;
-    x = zeros(c-3, 1);
-    x(simplexTable(3:r-2, 2)) = b_wave;
-    base = simplexTable(3:r-2, 2);
-    base = sort(base);
-    c_b = simplexTable(3:r-2, 1);
-    z = c_b.' * A_wave;
-    simplexTable(r-1, 3:c-1) = z;
-    simplexTable(r, 3:c-1) = z - simplexTable(1, 3:c-1);
-    cc = simplexTable(1, 3:c-1);
-    simplexTable(r-1,c) = cc * x;
-end
-
-function OptRates = getOptRates(simplexTable)
-    [r, c] = size(simplexTable);
-    OptRates = simplexTable(r, 3:c-1);
-end
-
-function A_wave = getAWave(simplexTable)
-    [r, c] = size(simplexTable);
-    A_wave = simplexTable(3:r-2, 3:c-1);
-end
-
-function b_wave = getBWave(simplexTable)
-    [r, c] = size(simplexTable);
-    b_wave = simplexTable(3:r-2, c);
-end
-
-function ind = getIndexOfExitingInBWave(simplexTable, variable)
-    [r, c] = size(simplexTable);
-    b = simplexTable(3:r-2, 2);
-    ind = find(b==variable);
-end
-
-function base = getBase(simplexTable)
-    [r, c] = size(simplexTable);
-    base = simplexTable(3:r-2 ,2).';
-end
-
-function A_wave = calculateAWave(base, A)
-    A_b = A(:,base);
-    A_b_i = inv(A_b);
-    A_wave = A_b_i * A;
-end
-
-function [base, nonBase] = chooseBase(A)
-    base = [3,4,5];
-    nonBase = [1,2];
-end
-
-function [Z, OptRates] = calculateOptRate(A_wave, c_b, c)
-    Z = c_b.' * A_wave;
-    Z = Z.';
-    OptRates = Z - c;
-end
+% building simplex
 
 function simplexTable = buildSimplexTable(A, b, c, base)
-    simplexTable = NaN(size(b, 1) + 4, size(A,2) + 3);
+    % prawie wszystkie informacje w algorytmie są przechowywane w tabeli
+    % sympleksowej, która ma taka samą strukturę jak na wykładzie, przy
+    % czym ma dodane kilka NaNów, żeby mieć prostokątny kształt
+
+    simplexTable = NaN(size(b, 1) + 4, size(A,2) + 3); % NaN są traktowane jak puste miejsca
+    
     [row, col] = size(simplexTable);
     
     m = size(base, 2);
@@ -371,13 +313,15 @@ function simplexTable = buildSimplexTable(A, b, c, base)
     mOffset = m - 1;
     nOffset = n - 1;
     
+    % inicjalizacja elementów tabeli sympleksowej
     A_b = A(:, base);
     c_b  = c(base,1);
-    A_wave = calculateAWave(base, A);
+    A_wave = inv(A_b) * A;
     b_wave = inv(A_b) * b;
     x = zeros(size(c, 1),1);
     x(base) = b_wave;
     
+    % przypisanie elementów tabeli sympleksowej w odpowiednich miejscach
     simplexTable(3:3 + mOffset,1) = c_b;
     simplexTable(3:3 + mOffset,2) = base.';
     simplexTable(1, 3:3 + nOffset) = c.';
@@ -387,6 +331,41 @@ function simplexTable = buildSimplexTable(A, b, c, base)
     simplexTable(2 + m + 2, 3:3 + nOffset) = simplexTable(2 + m + 1, 3:3 + nOffset) - c.';
     simplexTable(3:3+mOffset, 2 + n + 1) = b_wave;
     simplexTable(row-1, col) = c.' * x;
+end
+
+function simplexTable = updateSimplexTable(oldSimplexTable, A_wave, b_wave, enterInd, exitInd)
+    [r, c] = size(oldSimplexTable);
+    
+    simplexTable = oldSimplexTable;
+    
+    % podmiana zmiennej w bazie
+    simplexTable(2 + exitInd, 2) = enterInd;
+    simplexTable(2 + exitInd, 1) = simplexTable(1, 2 + enterInd);
+    
+    % aktualizacja tablic A_wave i b_wave
+    simplexTable(3:r-2, 3:c-1) = A_wave;
+    simplexTable(3:r-2, c) = b_wave;
+    
+    % aktualne rozwiązanie
+    x = getResult(simplexTable);
+    
+    % aktualizacja z i z-c
+    c_b = simplexTable(3:r-2, 1);
+    z = c_b.' * A_wave;
+    simplexTable(r-1, 3:c-1) = z;
+    simplexTable(r, 3:c-1) = z - simplexTable(1, 3:c-1);
+    
+    % aktualizacja wartości funkcji
+    cc = simplexTable(1, 3:c-1);
+    simplexTable(r-1,c) = cc * x.';
+end
+
+% other
+
+function printState(simplexTable, iteration)
+    message = ['Iteration ' num2str(iteration) '. Current varaibles in base ' num2str(sort(getBase(simplexTable)) '.'];
+    disp(message);
+    disp(simplexTable);
 end
 
 

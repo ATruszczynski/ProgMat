@@ -1,0 +1,8 @@
+for j=1:size_j
+            if(z_c(j)<0)
+                if(all(symplex_table(:,j) <= 0) == 1)
+                    disp("No optimal solution for given task is present");
+                    return
+                end
+            end
+        end
