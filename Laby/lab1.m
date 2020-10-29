@@ -1,7 +1,7 @@
 function lab1()
-    %linoprogTest(10) % wywołuje linprog tyle razy, ile zostanie podane jako argument
+      linoprogTest(5) % wywołuje linprog tyle razy, ile zostanie podane jako argument
 
-%     single solution
+%    single solution
     
     A = [1, 0, 1, 0; 0, 1, 0, 1];
     b = [2; 2];
@@ -19,11 +19,20 @@ function lab1()
     
     disp('----------------------------------------')
 
-%     two solutions
+%    two solutions
     
     A = [1, 0, 1, 0, 0; 0, 1, 0, 1, 0; 1, 1, 0, 0, 1;];
     b = [2; 2; 3;];
     c = [-1; -1; 0; 0; 0;];
+    [result, funcVal, status, message] = simplex(A, b, -c)
+    
+    disp('----------------------------------------')
+
+%     three solutions
+   
+    A = [1, 1, 1, 1;];
+    b = [1;];
+    c = [-1; -1; -1; 0;];
     [result, funcVal, status, message] = simplex(A, b, -c)
     
     disp('----------------------------------------')
@@ -43,9 +52,6 @@ function lab1()
     [result, funcVal, status, message] = simplex(A, b, c)
     
     disp('----------------------------------------')
-
-
-
         
     
 end
@@ -53,7 +59,7 @@ end
 function linoprogTest(max_it)
     var_num = 10;
     cond_num = 5;
-        
+    rng(1001)
     for it = 1:max_it
 
         ALE = [];
@@ -70,8 +76,7 @@ function linoprogTest(max_it)
 
         options = optimset(@linprog);   
         options = optimset(options, 'Display', 'iter', 'Algorithm', 'dual-simplex');
-        [x,fval,exitflag,output,lambda] = linprog(-c, [], [], ALE, bLE, LB, [], [], options)
-        
+        [x,fval,exitflag,output,lambda] = linprog(c, [], [], ALE, bLE, LB, [], [], options);
     end
 end
 
@@ -113,7 +118,7 @@ function [result, funcVal, status, message] = simplex(A, b, c) % algorytm simple
             if unlim
                 status = -1;
                 result = [];
-                funcVal = Inf;
+                funcVal = [];
                 message = calculateExtremeRadius(i, simplexTable);
                 return
             end
@@ -143,23 +148,28 @@ function [result, funcVal, status, message] = simplex(A, b, c) % algorytm simple
     % sprawdź czy istnieje drugie rozwiązanie
     % jeśli tak, funkcja od razu zwraca indeksy zmiennej do dodadania do
     % bazy i zmiennej do usunięcia z bazy
-    [isThereAnother, enterIndex, exitIndex] = checkForAnotherSolution(simplexTable);
+    [enterIndicies, exitIndcicies] = checkForAnotherSolution(simplexTable);
+    if length(enterIndicies) > 0
+        message = [];
+        for i = 1:length(enterIndicies)
+            enterIndex = enterIndicies(i);
+            exitIndex = exitIndcicies(i);
 
-    if isThereAnother
-        % przelicz drugie rozwiązanie powtarzajac kroki 7-8
-        simplexTable = substituteBase(simplexTable, enterIndex, exitIndex);
-        
-        % przypisz odpowiedni status, wyniki i wiadomość dla dwóch
-        % rozwiązań
-        
-        status = 2;
-        result2 = getResult(simplexTable);
-        result2 = result2(1:trueVariable); 
-        funcVal2 = getFuncVal(simplexTable);
-        message = ['Second solution found at [' num2str(result2) ']. The value of function at this point is ' num2str(funcVal2)];
-        
-        disp('Simplex table for other solution');
-        disp(simplexTable);
+            % przelicz drugie rozwiązanie powtarzajac kroki 7-8
+            simplexTable = substituteBase(simplexTable, enterIndex, exitIndex);
+
+            % przypisz odpowiedni status, wyniki i wiadomość dla dwóch
+            % rozwiązań
+
+            status = 2;
+            result2 = getResult(simplexTable);
+            result2 = result2(1:trueVariable); 
+            funcVal2 = getFuncVal(simplexTable);
+            message = append(num2str(message), ['Solution ' num2str(1 + i) ' found at [' num2str(result2) ']. The value of function at this point is ' num2str(funcVal2) newline]);
+
+            disp(['Simplex table for solution ' num2str(1 + i)]);
+            disp(simplexTable);
+        end
     end
 end
 
@@ -227,20 +237,16 @@ function newSimplexTable = substituteBase(simplexTable, enterIndex, exitIndex)
         newSimplexTable = updateSimplexTable(simplexTable, A_wave_p, b_wave_p, k, r);
 end
 
-function [isThereAnother, enterIndex, exitIndex] = checkForAnotherSolution(simplexTable)
-    enterIndex = NaN;
-    exitIndex = NaN;
+function [enterIndicies, exitIndicies] = checkForAnotherSolution(simplexTable)
+    exitIndicies = [];
     optRates = getOptRates(simplexTable);
     
     nonBase = getNonBase(simplexTable);
-    isThereAnother = ~all(optRates(nonBase) > 0);
     
-    enterIndex = chooseEnterIndex(simplexTable);
+    enterIndicies = nonBase(optRates(nonBase) == 0);
     
-    exitIndex = chooseExitIndex(simplexTable, enterIndex);
-    
-    if length(exitIndex) > 1
-        exitIndex = exitIndex(1);
+    for i = enterIndicies
+        exitIndicies(end + 1) = chooseExitIndex(simplexTable, i);
     end
 end
 
