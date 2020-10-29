@@ -1,33 +1,27 @@
 function lab1()
     %saveLinProg("Laby/TestFiles/linprog", 10, [2,2])
 
-%     A = [2, 1, 1, 0, 0; 3, 3 ,0, 1, 0; 1.5, 0, 0, 0, 1];
-%     b = [10; 24; 6];
-%     c = [3; 2; 0; 0; 0];
-%     [result, status] = simplexSF(A, b, c)
-%     
-%     A = [1, 0, 1, 0; 0, 1, 0, 1];
-%     b = [2; 2];
-%     c = [1; 1; 0; 0;];
-%     [result, status] = simplexSF(A, b, c)
-%     
-%     
-%     A = [1, 2, -1, -1, 1, 0; 2, -2, 3, -3, 0, 1];
-%     b = [4; 9];
-%     c = [3; 1; -3; -1; 0; 0;];
-%     [result, status] = simplexSF(A, b, c)
-%     
-%     
-%     A = [-4, -2, -1, 1, 0, 0; 2, -1, 1, 0, 1, 0; 3, 0, 1, 0, 0, 1;];
-%     b = [2; 1; 5;];
-%     c = [-1; 1; 3; 0; 0; 0;];
-%     [result, status] = simplexSF(A, b, c)
-%     
-%     
-%     A = [-1, 1, 1, 0; 1, -1, 0, 1];
-%     b = [3; 3;];
-%     c = [1; 1; 0; 0;];
-%     [result, status] = simplexSF(A, b, c)
+    A = [2, 1, 1, 0, 0; 3, 3 ,0, 1, 0; 1.5, 0, 0, 0, 1];
+    b = [10; 24; 6];
+    c = [3; 2; 0; 0; 0];
+    [result, status] = simplexSF(A, b, c)
+    
+    A = [1, 0, 1, 0; 0, 1, 0, 1];
+    b = [2; 2];
+    c = [1; 1; 0; 0;];
+    [result, status] = simplexSF(A, b, c)
+    
+    
+    A = [1, 2, -1, -1, 1, 0; 2, -2, 3, -3, 0, 1];
+    b = [4; 9];
+    c = [3; 1; -3; -1; 0; 0;];
+    [result, status] = simplexSF(A, b, c)
+    
+    
+    A = [-4, -2, -1, 0, 0, 0; 2, -1, 1, 0, 0, 0];
+    b = [2; 1; 5;];
+    c = [-1; 1; -3; 0; 0; 0;];
+    [result, status] = simplexSF(A, b, c)
 end
 
 function saveLinProg(path, max_it, demanded)
@@ -93,7 +87,6 @@ function [result, status] = simplexSF(A, b, c) % algorytm simplex, który przyjm
     
     n = size(A,2);
     base = trueVariable+1:n;
-    %base = [4, 5, 6]
     
     simplexTable = buildSimplexTable(A, b, c, base);
     
