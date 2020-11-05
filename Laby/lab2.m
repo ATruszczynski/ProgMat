@@ -1,55 +1,65 @@
 function lab1()
-    linoprogTest(5) % wywołuje linprog tyle razy, ile zostanie podane jako argument
+%     linoprogTest(5) % wywołuje linprog tyle razy, ile zostanie podane jako argument
+
+    verbose = false;
 
 %    single solution
     
     A = [1, 0, 1, 0; 0, 1, 0, 1];
     b = [2; 2];
     c = [-1; -1; 0; 0;];
-    [result, funcVal, status, message] = simplex(A, b, -c)
+    [result, funcVal, status, message] = simplex(A, b, -c, verbose)
+    
+%     disp('----------------------------------------')
+% 
+% %     unbound
+%     
+%     A = [-1, 1, 1, 0; 1, -1, 0, 1];
+%     b = [2; 2];
+%     c = [-1; -1; 0; 0;];
+%     [result, funcVal, status, message] = simplex(A, b, -c, verbose)
+%     
+%     disp('----------------------------------------')
+% 
+% %    two solutions
+%     
+%     A = [1, 0, 1, 0, 0; 0, 1, 0, 1, 0; 1, 1, 0, 0, 1;];
+%     b = [2; 2; 3;];
+%     c = [-1; -1; 0; 0; 0;];
+%     [result, funcVal, status, message] = simplex(A, b, -c, verbose)
+%     
+%     disp('----------------------------------------')
+% 
+% %     three solutions
+%    
+%     A = [1, 1, 1, 1;];
+%     b = [1;];
+%     c = [-1; -1; -1; 0;];
+%     [result, funcVal, status, message] = simplex(A, b, -c, verbose)
+%     
+%     disp('----------------------------------------')
+% %     
+% %   pierwszy przykład z wykładu
+%     A = [2, 1, 1, 0, 0; 3, 3, 0, 1, 0; 1.5, 0, 0, 0, 1;];
+%     b = [10; 24; 6;];
+%     c = [3; 2; 0; 0; 0;];
+%     [result, funcVal, status, message] = simplex(A, b, c, verbose)
+%     
+%     disp('----------------------------------------')
+%     
+% %   drugi przykład z wykładu
+%     A = [1, 2, -1, -1, 1, 0; 2, -2, 3, -3, 0, 1;];
+%     b = [4; 9;];
+%     c = [3; 1; 3; -1; 0; 0;];
+%     [result, funcVal, status, message] = simplex(A, b, c, verbose)
     
     disp('----------------------------------------')
 
-%     unbound
-    
-    A = [-1, 1, 1, 0; 1, -1, 0, 1];
-    b = [2; 2];
-    c = [-1; -1; 0; 0;];
-    [result, funcVal, status, message] = simplex(A, b, -c)
-    
-    disp('----------------------------------------')
-
-%    two solutions
-    
-    A = [1, 0, 1, 0, 0; 0, 1, 0, 1, 0; 1, 1, 0, 0, 1;];
-    b = [2; 2; 3;];
-    c = [-1; -1; 0; 0; 0;];
-    [result, funcVal, status, message] = simplex(A, b, -c)
-    
-    disp('----------------------------------------')
-
-%     three solutions
-   
-    A = [1, 1, 1, 1;];
-    b = [1;];
-    c = [-1; -1; -1; 0;];
-    [result, funcVal, status, message] = simplex(A, b, -c)
-    
-    disp('----------------------------------------')
-    
-%   pierwszy przykład z wykładu
-    A = [2, 1, 1, 0, 0; 3, 3, 0, 1, 0; 1.5, 0, 0, 0, 1;];
-    b = [10; 24; 6;];
-    c = [3; 2; 0; 0; 0;];
-    [result, funcVal, status, message] = simplex(A, b, c)
-    
-    disp('----------------------------------------')
-    
-%   drugi przykład z wykładu
-    A = [1, 2, -1, -1, 1, 0; 2, -2, 3, -3, 0, 1;];
-    b = [4; 9;];
-    c = [3; 1; 3; -1; 0; 0;];
-    [result, funcVal, status, message] = simplex(A, b, c)
+%   Beale
+    A = [1, 0, 0, 1/4, -8, -1, 9; 0, 1, 0, 1/2, -12, -1/2, 3; 0, 0, 1, 0, 0, 1, 0];
+    b = [0; 0; 1;];
+    c = [0; 0; 0; 3/4; -20; 1/2; -6;];
+    [result, funcVal, status, message] = simplex(A, b, c, verbose)
     
     disp('----------------------------------------')
         
@@ -80,22 +90,32 @@ function linoprogTest(max_it)
     end
 end
 
-function [result, funcVal, status, message] = simplex(A, b, c) % algorytm simplex, który przyjmuje problem w postaci standardowej
+function [result, funcVal, status, message] = simplex(A, b, c, verbose) % algorytm simplex, który przyjmuje problem w postaci standardowej
     %status = 1 - ok; -1 - unlimited; 2 - more than one solution
     trueVariable = size(A,2) - size(A,1);
     
     iteration = 0;
     
-    % krok 1
+    % krok 1 / faza 1
     
-    n = size(A,2);
-    base = trueVariable+1:n;
+%     n = size(A,2);
+%     base = trueVariable+1:n;
+
+    base = attemptChooseBase(A)
     
-    simplexTable = buildSimplexTable(A, b, c, base);
+    if isnan(base)
+        
+    else
+        simplexTable = buildSimplexTable(A, b, c, base);
+    end
     
+    
+    % faza 2
     while true
         iteration = iteration + 1;
-        printState(simplexTable, iteration)
+        if verbose
+            printState(simplexTable, iteration)
+        end
         
         % krok 2
         
@@ -166,14 +186,44 @@ function [result, funcVal, status, message] = simplex(A, b, c) % algorytm simple
             result2 = result2(1:trueVariable); 
             funcVal2 = getFuncVal(simplexTable);
             message = append(num2str(message), ['Solution ' num2str(1 + i) ' found at [' num2str(result2) ']. The value of function at this point is ' num2str(funcVal2) newline]);
-
-            disp(['Simplex table for solution ' num2str(1 + i)]);
-            disp(simplexTable);
+            if verbose
+                disp(['Simplex table for solution ' num2str(1 + i)]);
+                disp(simplexTable);
+            end
         end
     end
 end
 
 % algorithm operations
+
+function base = attemptChooseBase(A)
+    [r,c] = size(A);
+    base = [];
+    for j = 1:c
+        nonZeroes = 0;
+        varInd = -1;
+        for i = 1:r
+           a = A(i, j);
+           if a ~= 0
+               nonZeroes = nonZeroes + 1;
+           end
+           if a == 1
+               varInd = j;
+           end
+        end
+        if nonZeroes == 1 & varInd ~= -1
+            base(end + 1) = varInd;
+        end
+    end
+    
+    base = unique(base);
+    bl = size(base,2);
+    if bl >= r
+        base = base(1:r);
+    else
+        base = NaN;
+    end
+end
 
 function enterIndex = chooseEnterIndex(simplexTable) % wyznacz indeks zmiennej wchodzącej do bazy
     optRates = getOptRates(simplexTable);
