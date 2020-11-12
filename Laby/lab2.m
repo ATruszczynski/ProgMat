@@ -3,13 +3,13 @@ function lab1()
 
     verbose = false;
 
-%    single solution
-    
-    A = [1, 0, 1, 0; 0, 1, 0, 1];
-    b = [2; 2];
-    c = [-1; -1; 0; 0;];
-    [result, funcVal, status, message] = simplex(A, b, -c, verbose)
-    
+% %    single solution
+%     
+%     A = [1, 0, 1, 0; 0, 1, 0, 1];
+%     b = [2; 2];
+%     c = [-1; -1; 0; 0;];
+%     [result, funcVal, status, message] = simplex(A, b, -c, 2, verbose)
+%     
 %     disp('----------------------------------------')
 % 
 % %     unbound
@@ -17,7 +17,7 @@ function lab1()
 %     A = [-1, 1, 1, 0; 1, -1, 0, 1];
 %     b = [2; 2];
 %     c = [-1; -1; 0; 0;];
-%     [result, funcVal, status, message] = simplex(A, b, -c, verbose)
+%     [result, funcVal, status, message] = simplex(A, b, -c, 2, verbose)
 %     
 %     disp('----------------------------------------')
 % 
@@ -26,40 +26,48 @@ function lab1()
 %     A = [1, 0, 1, 0, 0; 0, 1, 0, 1, 0; 1, 1, 0, 0, 1;];
 %     b = [2; 2; 3;];
 %     c = [-1; -1; 0; 0; 0;];
-%     [result, funcVal, status, message] = simplex(A, b, -c, verbose)
+%     [result, funcVal, status, message] = simplex(A, b, -c, 3, verbose)
 %     
 %     disp('----------------------------------------')
-% 
+
 % %     three solutions
 %    
 %     A = [1, 1, 1, 1;];
 %     b = [1;];
 %     c = [-1; -1; -1; 0;];
-%     [result, funcVal, status, message] = simplex(A, b, -c, verbose)
+%     [result, funcVal, status, message] = simplex(A, b, -c, 1, verbose)
 %     
 %     disp('----------------------------------------')
 % %     
-% %   pierwszy przykład z wykładu
+%   pierwszy przykład z wykładu
 %     A = [2, 1, 1, 0, 0; 3, 3, 0, 1, 0; 1.5, 0, 0, 0, 1;];
 %     b = [10; 24; 6;];
 %     c = [3; 2; 0; 0; 0;];
-%     [result, funcVal, status, message] = simplex(A, b, c, verbose)
-%     
-%     disp('----------------------------------------')
+%     [result, funcVal, status, message] = simplex(A, b, c, 3, verbose)
+    
+    disp('----------------------------------------')
 %     
 % %   drugi przykład z wykładu
 %     A = [1, 2, -1, -1, 1, 0; 2, -2, 3, -3, 0, 1;];
 %     b = [4; 9;];
 %     c = [3; 1; 3; -1; 0; 0;];
-%     [result, funcVal, status, message] = simplex(A, b, c, verbose)
+%     [result, funcVal, status, message] = simplex(A, b, c, 2, verbose)
     
-    disp('----------------------------------------')
+%     disp('----------------------------------------')
+% 
+% %   Beale
+%     A = [1, 0, 0, 1/4, -8, -1, 9; 0, 1, 0, 1/2, -12, -1/2, 3; 0, 0, 1, 0, 0, 1, 0];
+%     b = [0; 0; 1;];
+%     c = [0; 0; 0; 3/4; -20; 1/2; -6;];
+%     [result, funcVal, status, message] = simplex(A, b, c, 0, verbose)
+%     
+%     disp('----------------------------------------')
 
-%   Beale
-    A = [1, 0, 0, 1/4, -8, -1, 9; 0, 1, 0, 1/2, -12, -1/2, 3; 0, 0, 1, 0, 0, 1, 0];
-    b = [0; 0; 1;];
-    c = [0; 0; 0; 3/4; -20; 1/2; -6;];
-    [result, funcVal, status, message] = simplex(A, b, c, verbose)
+%   No easy base example
+    A = [1, 1, 0; -1, 1, 0;];
+    b = [1; 0;];
+    c = [0; 1; 0;];
+    [result, funcVal, status, message] = simplex(A, b, c, 0, verbose)
     
     disp('----------------------------------------')
         
@@ -90,107 +98,68 @@ function linoprogTest(max_it)
     end
 end
 
-function [result, funcVal, status, message] = simplex(A, b, c, verbose) % algorytm simplex, który przyjmuje problem w postaci standardowej
-    %status = 1 - ok; -1 - unlimited; 2 - more than one solution
-    trueVariable = size(A,2) - size(A,1);
-    
-    iteration = 0;
+function [result, funcVal, status, message] = simplex(A, b, c, complVarCount, verbose) % algorytm simplex, który przyjmuje problem w postaci standardowej
+    %status = 1 - ok; -1 - unlimited; 2 - more than one solution; -2 - inconsistent; 0 -
+    %algorithm is ongoing (if this appears on output something went wrong)
+    trueVariable = size(A,2) - complVarCount;
     
     % krok 1 / faza 1
-    
-%     n = size(A,2);
-%     base = trueVariable+1:n;
 
-    base = attemptChooseBase(A)
+    base = attemptChooseBase(A);
     
     if isnan(base)
-        
+         disp("No base")
+         [simplexTable, status] = phase1Computation(A, b, c);
+         return
     else
         simplexTable = buildSimplexTable(A, b, c, base);
     end
     
-    
     % faza 2
-    while true
-        iteration = iteration + 1;
-        if verbose
-            printState(simplexTable, iteration)
-        end
-        
-        % krok 2
-        
-        optRates = getOptRates(simplexTable); % optRates = z - c
-
-        % krok 3
-        
-        if all(optRates>=0) % sprawdzenie warunku optymalności
-            break
-        end
-
-        % krok 4 - potencjalny koniec
-        
-        indiciesWithNegativeOptRates = find(optRates < 0); % indeksy, dla których należy sprawdzić warunek nieograniczności rozwiązania
-        
-        A_wave = getAWave(simplexTable);
-        
-        for i = indiciesWithNegativeOptRates
-            unlim = all(A_wave(:, i) <= 0);
-            if unlim
-                status = -1;
-                result = [];
-                funcVal = [];
-                message = calculateExtremeRadius(i, simplexTable);
-                return
-            end
-        end
-        
-        % krok 5
-        
-        enterIndex = chooseEnterIndex(simplexTable);
-        
-        % krok 6
-        
-        exitIndex = chooseExitIndex(simplexTable, enterIndex);
-        
-        % krok 7,8
-        
-        simplexTable = substituteBase(simplexTable, enterIndex, exitIndex);
-    end
+    
+    [simplexTable, status, negIndex] = internalSimplexLoop(simplexTable, verbose);
     
     % przypisz odpowiedni status, wyniki i wiadomość dla pojedynczego
     % rozwiązania
-    status = 1;
-    message = 'Single solution found';
-    result = getResult(simplexTable);
-    result = result(1:trueVariable);
-    funcVal = getFuncVal(simplexTable);
-    
-    % sprawdź czy istnieje drugie rozwiązanie
-    % jeśli tak, funkcja od razu zwraca indeksy zmiennej do dodadania do
-    % bazy i zmiennej do usunięcia z bazy
-    [enterIndicies, exitIndcicies] = checkForAnotherSolution(simplexTable);
-    if length(enterIndicies) > 0
-        message = [];
-        for i = 1:length(enterIndicies)
-            enterIndex = enterIndicies(i);
-            exitIndex = exitIndcicies(i);
+    if status == 0
+        status = 1;
+        message = 'Single solution found';
+        result = getResult(simplexTable);
+        result = result(1:trueVariable);
+        funcVal = getFuncVal(simplexTable);
 
-            % przelicz drugie rozwiązanie powtarzajac kroki 7-8
-            simplexTable = substituteBase(simplexTable, enterIndex, exitIndex);
+        % sprawdź czy istnieje drugie rozwiązanie
+        % jeśli tak, funkcja od razu zwraca indeksy zmiennej do dodadania do
+        % bazy i zmiennej do usunięcia z bazy
+        [enterIndicies, exitIndcicies] = checkForAnotherSolution(simplexTable);
+        if length(enterIndicies) > 0
+            message = [];
+            for i = 1:length(enterIndicies)
+                enterIndex = enterIndicies(i);
+                exitIndex = exitIndcicies(i);
 
-            % przypisz odpowiedni status, wyniki i wiadomość dla dwóch
-            % rozwiązań
+                % przelicz drugie rozwiązanie powtarzajac kroki 7-8
+                simplexTable = substituteBase(simplexTable, enterIndex, exitIndex);
 
-            status = 2;
-            result2 = getResult(simplexTable);
-            result2 = result2(1:trueVariable); 
-            funcVal2 = getFuncVal(simplexTable);
-            message = append(num2str(message), ['Solution ' num2str(1 + i) ' found at [' num2str(result2) ']. The value of function at this point is ' num2str(funcVal2) newline]);
-            if verbose
-                disp(['Simplex table for solution ' num2str(1 + i)]);
-                disp(simplexTable);
+                % przypisz odpowiedni status, wyniki i wiadomość dla dwóch
+                % rozwiązań
+
+                status = 2;
+                result2 = getResult(simplexTable);
+                result2 = result2(1:trueVariable); 
+                funcVal2 = getFuncVal(simplexTable);
+                message = append(num2str(message), ['Solution ' num2str(1 + i) ' found at [' num2str(result2) ']. The value of function at this point is ' num2str(funcVal2) newline]);
+                
+                if verbose
+                    disp(['Simplex table for solution ' num2str(1 + i)]);
+                    disp(simplexTable);
+                end
             end
         end
+    elseif status == -1
+        result = [];
+        funcVal = [];
+        message = calculateExtremeRadius(negIndex, simplexTable);
     end
 end
 
@@ -222,6 +191,83 @@ function base = attemptChooseBase(A)
         base = base(1:r);
     else
         base = NaN;
+    end
+end
+
+function [simplexTable, status, negInd] = internalSimplexLoop(simplexTable, verbose)
+    negInd = -1;
+    iteration = 0;
+    status = 0;
+    
+    while true
+        iteration = iteration + 1;
+        if verbose
+            printState(simplexTable, iteration)
+        end
+        
+        % krok 2
+        
+        optRates = getOptRates(simplexTable); % optRates = z - c
+
+        % krok 3
+        
+        if all(optRates>=0) % sprawdzenie warunku optymalności
+            break
+        end
+
+        % krok 4 - potencjalny koniec
+        
+        indiciesWithNegativeOptRates = find(optRates < 0); % indeksy, dla których należy sprawdzić warunek nieograniczności rozwiązania
+        
+        A_wave = getAWave(simplexTable);
+        
+        for i = indiciesWithNegativeOptRates
+            unlim = all(A_wave(:, i) <= 0);
+            if unlim
+                status = -1;
+                negInd = i;
+                break
+            end
+        end
+        
+        if status ~= 0
+            break
+        end
+        
+        % krok 5
+        
+        enterIndex = chooseEnterIndex(simplexTable);
+        
+        % krok 6
+        
+        exitIndex = chooseExitIndex(simplexTable, enterIndex);
+        
+        % krok 7,8
+        
+        simplexTable = substituteBase(simplexTable, enterIndex, exitIndex);
+    end
+end
+
+function [simplexTable, status] = phase1Computation(A, b, c)
+    status = 0;
+    [artVarCount, trueVarCount] = size(A)
+    
+    A = [A, eye(artVarCount)]
+    c = [c; zeros(artVarCount,1)]
+    
+    artVars = trueVarCount + 1: trueVarCount + artVarCount
+    
+    simplexTable = buildSimplexTable(A, b, c, artVars)
+    [simplexTable, status, negInd] = internalSimplexLoop(simplexTable, false)
+    
+    finished = all(ismember(artVars, getNonBase(simplexTable)))
+    finished = false
+    if finished
+        return
+    else
+        result = getResult(simplexTable)
+        toSearch = intersect(getBase(simplexTable), artVars)
+        find(ismember())
     end
 end
 
